@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Delper Ecom – DPR Transaction Assistant</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1628;--navy-mid:#13223A;--navy-card:#192D4A;--navy-deep:#08101E;
+  --gold:#C8970A;--gold-light:#F0B429;--teal:#00C2A8;--teal-dim:#00A18B;
+  --red:#FF4D6D;--white:#F4F8FF;--muted:#8FA3C0;--border:rgba(255,255,255,0.08);
+  --radius:14px;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);color:var(--white);font-size:15px;line-height:1.6;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;max-width:860px;margin:0 auto;box-shadow:0 0 60px rgba(0,194,168,0.06)}
+
+/* HEADER */
+.app-header{background:linear-gradient(135deg,#0B1628 0%,#0E2040 70%,#0B2530 100%);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;position:relative;overflow:hidden}
+.app-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 120% 80% at 80% -20%,rgba(0,194,168,0.10),transparent);pointer-events:none}
+.bot-avatar{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--teal),var(--gold));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;z-index:1}
+.header-info{flex:1;z-index:1}
+.header-info h1{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700}
+.header-info p{font-size:11px;color:var(--muted);margin-top:1px}
+.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22C55E;margin-right:4px;box-shadow:0 0 5px #22C55E}
+.lang-wrap{z-index:1}
+.lang-wrap select{background:var(--navy-card);border:1px solid rgba(0,194,168,0.3);color:var(--teal);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:600;cursor:pointer;outline:none;font-family:'Inter',sans-serif;max-width:155px}
+
+/* REGISTRATION */
+.reg-panel{background:var(--navy-mid);border-bottom:1px solid var(--border);padding:16px 18px;flex-shrink:0;overflow-y:auto;max-height:calc(100vh - 70px)}
+.reg-panel h2{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--teal);margin-bottom:12px;letter-spacing:0.3px}
+.reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.reg-field{display:flex;flex-direction:column;gap:3px}
+.reg-field.full{grid-column:1/-1}
+.reg-field label{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase}
+.reg-field input,.reg-field select{background:var(--navy-card);border:1px solid var(--border);color:var(--white);border-radius:7px;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;width:100%}
+.reg-field input::placeholder{color:var(--muted)}
+.reg-field input:focus,.reg-field select:focus{border-color:var(--teal)}
+.reg-field input.err{border-color:var(--red)!important}
+.phone-row{display:flex;gap:5px}
+.phone-row select{flex:0 0 115px;background:var(--navy-card);border:1px solid var(--border);color:var(--white);border-radius:7px;padding:8px 5px;font-size:12px;font-family:'Inter',sans-serif;outline:none}
+.phone-row input{flex:1}
+.start-btn{margin-top:12px;width:100%;background:linear-gradient(135deg,var(--teal),var(--teal-dim));border:none;border-radius:9px;padding:11px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity 0.2s,transform 0.15s;letter-spacing:0.3px}
+.start-btn:hover{opacity:0.88;transform:translateY(-1px)}
+.reg-panel.hidden{display:none}
+
+/* USER BAR */
+.user-bar{background:rgba(0,194,168,0.06);border-bottom:1px solid rgba(0,194,168,0.12);padding:7px 18px;display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.user-bar strong{color:var(--white);font-weight:600}
+.user-bar .sep{color:rgba(255,255,255,0.15)}
+.user-bar.hidden{display:none}
+
+/* STAGE TRACKER */
+.stage-bar{padding:11px 18px;background:var(--navy-deep);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+.stage-bar.hidden{display:none}
+.stages{display:flex;align-items:center;min-width:max-content}
+.stage{display:flex;align-items:center;gap:5px}
+.stage{cursor:pointer;padding:4px 6px;border-radius:8px;transition:background 0.15s}
+.stage:hover{background:rgba(255,255,255,0.05)}
+.stage-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);background:var(--navy-card);transition:all 0.3s;flex-shrink:0}
+.stage.done .stage-dot{background:var(--teal);border-color:var(--teal);color:#fff}
+.stage.active .stage-dot{background:var(--gold);border-color:var(--gold-light);color:#fff;box-shadow:0 0 10px rgba(240,180,41,0.35)}
+.stage-label{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:0.3px;white-space:nowrap}
+.stage.done .stage-label{color:var(--teal)}
+.stage.active .stage-label{color:var(--gold-light)}
+.stage-line{width:22px;height:2px;background:var(--border);flex-shrink:0;margin:0 2px;transition:background 0.3s}
+
+/* CHAT */
+.chat-window{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.chat-window::-webkit-scrollbar{width:4px}
+.chat-window::-webkit-scrollbar-thumb{background:var(--navy-card);border-radius:4px}
+
+.msg{display:flex;gap:8px;align-items:flex-end;max-width:84%}
+.msg.bot{align-self:flex-start}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-av{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.msg.bot .msg-av{background:linear-gradient(135deg,var(--teal),var(--teal-dim));color:#fff}
+.msg.user .msg-av{background:linear-gradient(135deg,var(--gold),#9a6e08);color:#fff}
+.msg-bub{padding:11px 15px;border-radius:16px;font-size:13.5px;line-height:1.65;max-width:100%}
+.msg.bot .msg-bub{background:var(--navy-card);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--white)}
+.msg.user .msg-bub{background:linear-gradient(135deg,var(--teal-dim),#007A68);border-bottom-right-radius:4px;color:#fff}
+.msg-time{font-size:10px;color:var(--muted);margin-top:3px}
+.msg.bot .msg-time{text-align:left}
+.msg.user .msg-time{text-align:right}
+.msg-col{display:flex;flex-direction:column}
+
+/* QUICK REPLIES */
+.qr-wrap{display:flex;flex-wrap:wrap;gap:7px;padding:0 18px 12px;flex-shrink:0}
+.qr-btn{background:var(--navy-card);border:1px solid rgba(0,194,168,0.28);color:var(--teal);border-radius:18px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;white-space:nowrap}
+.qr-btn:hover{background:rgba(0,194,168,0.1);border-color:var(--teal)}
+
+/* INPUT */
+.input-bar{padding:12px 14px;background:var(--navy-mid);border-top:1px solid var(--border);display:flex;gap:9px;align-items:flex-end;flex-shrink:0}
+.input-bar.hidden{display:none}
+.input-bar textarea{flex:1;background:var(--navy-card);border:1px solid var(--border);color:var(--white);border-radius:11px;padding:10px 13px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;resize:none;min-height:42px;max-height:110px;line-height:1.5;transition:border-color 0.2s}
+.input-bar textarea::placeholder{color:var(--muted)}
+.input-bar textarea:focus{border-color:var(--teal)}
+.send-btn{width:42px;height:42px;background:linear-gradient(135deg,var(--teal),var(--teal-dim));border:none;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.2s,transform 0.15s;font-size:17px;color:#fff}
+.send-btn:hover{opacity:0.88;transform:scale(1.05)}
+.send-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+
+/* END BAR */
+.end-bar{padding:9px 16px;background:var(--navy-deep);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.end-bar.hidden{display:none}
+.end-btn{background:rgba(255,77,109,0.10);border:1px solid rgba(255,77,109,0.28);color:var(--red);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
+.end-btn:hover{background:rgba(255,77,109,0.20)}
+.sid{font-size:10px;color:var(--muted)}
+
+/* TYPING */
+.typing{display:flex;gap:4px;align-items:center;padding:11px 15px;background:var(--navy-card);border:1px solid var(--border);border-radius:16px;border-bottom-left-radius:4px;width:fit-content}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bop 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-ov.hidden{display:none}
+.modal{background:var(--navy-mid);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:380px;width:100%;text-align:center}
+.modal h2{font-family:'Space Grotesk',sans-serif;font-size:19px;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6}
+.modal .hi{color:var(--teal);font-weight:600}
+.modal-btn{background:linear-gradient(135deg,var(--teal),var(--teal-dim));border:none;border-radius:9px;padding:11px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;width:100%}
+.modal-icon{font-size:40px;margin-bottom:10px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy-card);border:1px solid var(--teal);color:var(--white);padding:11px 16px;border-radius:9px;font-size:13px;font-weight:500;z-index:1000;transform:translateY(50px);opacity:0;transition:all 0.3s;pointer-events:none;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.err{border-color:var(--red);color:var(--red)}
+
+@media(max-width:580px){
+  .reg-grid{grid-template-columns:1fr}
+  .reg-field.full{grid-column:1}
+  .lang-wrap select{max-width:115px;font-size:10px}
+  .chat-window{padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="bot-avatar">🤖</div>
+  <div class="header-info">
+    <h1>Delper Ecom · DPR Transaction Assistant</h1>
+    <p><span class="status-dot"></span>Online · Guides you through all 7 transaction stages · 50+ Languages</p>
+  </div>
+  <div class="lang-wrap">
+    <select id="langSel" title="Select language"></select>
+  </div>
+</div>
+
+<!-- REGISTRATION -->
+<div class="reg-panel" id="regPanel">
+  <h2>👤 Register to Begin Your DPR Transaction Journey</h2>
+  <div class="reg-grid">
+    <div class="reg-field">
+      <label>Full Name</label>
+      <input type="text" id="rn" placeholder="e.g. Rajesh Kumar" autocomplete="name"/>
+    </div>
+    <div class="reg-field">
+      <label>Country</label>
+      <select id="rc"></select>
+    </div>
+    <div class="reg-field full">
+      <label>Phone Number</label>
+      <div class="phone-row">
+        <select id="rd"></select>
+        <input type="tel" id="rp" placeholder="e.g. 9876543210"/>
+      </div>
+    </div>
+    <div class="reg-field full">
+      <label>Email Address</label>
+      <input type="email" id="re" placeholder="e.g. rajesh@example.com" autocomplete="email"/>
+    </div>
+  </div>
+  <button class="start-btn" onclick="startChat()">🚀 Start Chat</button>
+</div>
+
+<!-- USER BAR -->
+<div class="user-bar hidden" id="userBar"></div>
+
+<!-- STAGE TRACKER -->
+<div class="stage-bar hidden" id="stageBar">
+  <div class="stages" id="stagesEl"></div>
+</div>
+
+<!-- CHAT WINDOW -->
+<div class="chat-window" id="chatWin"></div>
+
+<!-- QUICK REPLIES -->
+<div class="qr-wrap" id="qrWrap"></div>
+
+<!-- INPUT BAR -->
+<div class="input-bar hidden" id="inputBar">
+  <textarea id="msgIn" placeholder="Type your message…" rows="1" onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+  <button class="send-btn" id="sendBtn" onclick="doSend()">➤</button>
+</div>
+
+<!-- END BAR -->
+<div class="end-bar hidden" id="endBar">
+  <span class="sid" id="sidEl"></span>
+  <button class="end-btn" onclick="endChat()">🔚 End Chat &amp; Send Transcript</button>
+</div>
+
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div class="modal-ov hidden" id="modal">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <h2>Transcript Sent!</h2>
+    <p>Your full chat transcript has been prepared.<br/>
+    A copy has been sent to <span class="hi">gkbharta44@gmail.com</span><br/>
+    and <span class="hi" id="modalEmail"></span>.</p>
+    <button class="modal-btn" onclick="location.reload()">Start New Session</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════
+// LANGUAGES
+// ═══════════════════════════════════
+const LANGS = [
+  ["English","🌐 English"],["Hindi","🇮🇳 हिन्दी"],["Arabic","🇦🇪 العربية"],
+  ["Spanish","🇪🇸 Español"],["French","🇫🇷 Français"],["Portuguese","🇧🇷 Português"],
+  ["German","🇩🇪 Deutsch"],["Mandarin","🇨🇳 普通话"],["Japanese","🇯🇵 日本語"],
+  ["Korean","🇰🇷 한국어"],["Russian","🇷🇺 Русский"],["Italian","🇮🇹 Italiano"],
+  ["Dutch","🇳🇱 Nederlands"],["Turkish","🇹🇷 Türkçe"],["Polish","🇵🇱 Polski"],
+  ["Malay","🇲🇾 Bahasa Melayu"],["Indonesian","🇮🇩 Bahasa Indonesia"],["Thai","🇹🇭 ภาษาไทย"],
+  ["Vietnamese","🇻🇳 Tiếng Việt"],["Bengali","🇧🇩 বাংলা"],["Urdu","🇵🇰 اردو"],
+  ["Tamil","🇮🇳 தமிழ்"],["Telugu","🇮🇳 తెలుగు"],["Kannada","🇮🇳 ಕನ್ನಡ"],
+  ["Malayalam","🇮🇳 മലയാളം"],["Gujarati","🇮🇳 ગુજરાતી"],["Marathi","🇮🇳 मराठी"],
+  ["Punjabi","🇮🇳 ਪੰਜਾਬੀ"],["Swahili","🇰🇪 Kiswahili"],["Hausa","🇳🇬 Hausa"],
+  ["Yoruba","🇳🇬 Yorùbá"],["Amharic","🇪🇹 አማርኛ"],["Zulu","🇿🇦 isiZulu"],
+  ["Persian","🇮🇷 فارسی"],["Hebrew","🇮🇱 עברית"],["Greek","🇬🇷 Ελληνικά"],
+  ["Romanian","🇷🇴 Română"],["Hungarian","🇭🇺 Magyar"],["Czech","🇨🇿 Čeština"],
+  ["Swedish","🇸🇪 Svenska"],["Norwegian","🇳🇴 Norsk"],["Danish","🇩🇰 Dansk"],
+  ["Finnish","🇫🇮 Suomi"],["Ukrainian","🇺🇦 Українська"],["Filipino","🇵🇭 Filipino"],
+  ["Sinhala","🇱🇰 සිංහල"],["Nepali","🇳🇵 नेपाली"],["Burmese","🇲🇲 မြန်မာ"],
+  ["Khmer","🇰🇭 ខ្មែរ"],["Lao","🇱🇦 ລາວ"]
+];
+
+// ═══════════════════════════════════
+// COUNTRIES
+// ═══════════════════════════════════
+const CTRIES = [
+  {n:"Afghanistan",d:"+93"},{n:"Albania",d:"+355"},{n:"Algeria",d:"+213"},
+  {n:"Argentina",d:"+54"},{n:"Australia",d:"+61"},{n:"Austria",d:"+43"},
+  {n:"Bahrain",d:"+973"},{n:"Bangladesh",d:"+880"},{n:"Belgium",d:"+32"},
+  {n:"Brazil",d:"+55"},{n:"Cambodia",d:"+855"},{n:"Canada",d:"+1"},
+  {n:"Chile",d:"+56"},{n:"China",d:"+86"},{n:"Colombia",d:"+57"},
+  {n:"Croatia",d:"+385"},{n:"Czech Republic",d:"+420"},{n:"Denmark",d:"+45"},
+  {n:"Egypt",d:"+20"},{n:"Ethiopia",d:"+251"},{n:"Finland",d:"+358"},
+  {n:"France",d:"+33"},{n:"Germany",d:"+49"},{n:"Ghana",d:"+233"},
+  {n:"Greece",d:"+30"},{n:"Hong Kong",d:"+852"},{n:"Hungary",d:"+36"},
+  {n:"India",d:"+91"},{n:"Indonesia",d:"+62"},{n:"Iran",d:"+98"},
+  {n:"Iraq",d:"+964"},{n:"Ireland",d:"+353"},{n:"Israel",d:"+972"},
+  {n:"Italy",d:"+39"},{n:"Japan",d:"+81"},{n:"Jordan",d:"+962"},
+  {n:"Kenya",d:"+254"},{n:"Kuwait",d:"+965"},{n:"Laos",d:"+856"},
+  {n:"Lebanon",d:"+961"},{n:"Malaysia",d:"+60"},{n:"Mexico",d:"+52"},
+  {n:"Morocco",d:"+212"},{n:"Myanmar",d:"+95"},{n:"Nepal",d:"+977"},
+  {n:"Netherlands",d:"+31"},{n:"New Zealand",d:"+64"},{n:"Nigeria",d:"+234"},
+  {n:"Norway",d:"+47"},{n:"Oman",d:"+968"},{n:"Pakistan",d:"+92"},
+  {n:"Philippines",d:"+63"},{n:"Poland",d:"+48"},{n:"Portugal",d:"+351"},
+  {n:"Qatar",d:"+974"},{n:"Romania",d:"+40"},{n:"Russia",d:"+7"},
+  {n:"Saudi Arabia",d:"+966"},{n:"Senegal",d:"+221"},{n:"Singapore",d:"+65"},
+  {n:"South Africa",d:"+27"},{n:"South Korea",d:"+82"},{n:"Spain",d:"+34"},
+  {n:"Sri Lanka",d:"+94"},{n:"Sweden",d:"+46"},{n:"Switzerland",d:"+41"},
+  {n:"Tanzania",d:"+255"},{n:"Thailand",d:"+66"},{n:"Turkey",d:"+90"},
+  {n:"UAE",d:"+971"},{n:"Uganda",d:"+256"},{n:"Ukraine",d:"+380"},
+  {n:"United Kingdom",d:"+44"},{n:"United States",d:"+1"},{n:"Vietnam",d:"+84"},
+  {n:"Yemen",d:"+967"},{n:"Zimbabwe",d:"+263"}
+];
+
+// ═══════════════════════════════════
+// STAGE DEFINITIONS
+// ═══════════════════════════════════
+const STAGES = [
+  "Initiation","KYC / ID","Wallet","Purchase","Reward Split","Confirmation","Complete"
+];
+
+// ═══════════════════════════════════
+// CONVERSATION SCRIPT (multilingual via built-in AI knowledge)
+// Each stage has: botMsg(user,lang), quickReplies, stageIndex
+// ═══════════════════════════════════
+
+// Translation map for key phrases
+const T = {
+  greet: {
+    English: (u) => `👋 Welcome, <strong>${u.name}</strong>! I'm your DPR Transaction Assistant from <strong>Delper Ecom</strong>.\n\nI'll guide you step-by-step through all 7 stages of your DPR transaction journey — from onboarding right through to your tokens being confirmed in your wallet.\n\n🌍 You're joining from <strong>${u.country}</strong> — great to have you!\n\n<strong>Stage 1 — Initiation:</strong> Let me give you a quick overview of what DPR is and how it works before we proceed.`,
+    Hindi: (u) => `👋 स्वागत है, <strong>${u.name}</strong> जी! मैं <strong>Delper Ecom</strong> का आपका DPR ट्रांज़ैक्शन असिस्टेंट हूँ।\n\nमैं आपको DPR लेनदेन के सभी 7 चरन्ों में कदम-दर-कदम मार्गदर्शन करूँगा।\n\n🌍 आप <strong>${u.country}</strong> से जुड़ रहे हैं — आपका स्वागत है!\n\n<strong>चरण 1 — प्रारंभ:</strong> पहले मैं आपको DPR के बारे में संक्षिप्त जानकारी देता हूँ।`,
+    Arabic: (u) => `👋 مرحباً، <strong>${u.name}</strong>! أنا مساعدك لمعاملات DPR من <strong>Delper Ecom</strong>.\n\nسأرشدك خطوة بخطوة عبر جميع المراحل السبعة لرحلة معاملات DPR الخاصة بك.\n\n🌍 أنت تنضم من <strong>${u.country}</strong> — أهلاً وسهلاً!\n\n<strong>المرحلة 1 — البدء:</strong> دعني أعطيك نظرة عامة سريعة على ما هو DPR وكيف يعمل.`,
+    Spanish: (u) => `👋 ¡Bienvenido/a, <strong>${u.name}</strong>! Soy tu Asistente de Transacciones DPR de <strong>Delper Ecom</strong>.\n\nTe guiaré paso a paso por las 7 etapas de tu viaje de transacciones DPR.\n\n🌍 Te unes desde <strong>${u.country}</strong> — ¡qué bueno tenerte!\n\n<strong>Etapa 1 — Inicio:</strong> Déjame darte una descripción rápida de qué es DPR y cómo funciona.`,
+    French: (u) => `👋 Bienvenue, <strong>${u.name}</strong>! Je suis votre Assistant de Transaction DPR de <strong>Delper Ecom</strong>.\n\nJe vous guiderai étape par étape à travers les 7 étapes de votre parcours de transaction DPR.\n\n🌍 Vous vous connectez depuis <strong>${u.country}</strong> — bienvenue!\n\n<strong>Étape 1 — Initiation:</strong> Laissez-moi vous donner un aperçu rapide de ce qu'est le DPR et comment il fonctionne.`,
+  },
+  overview: {
+    English: () => `Here's how DPR works:\n\n💠 <strong>DPR (Delper Token)</strong> is a blockchain-native loyalty & settlement protocol built on IBM Hyperledger.\n\n🔄 <strong>Every $247 transaction</strong> is automatically split:\n• <strong>25%</strong> = $61.75 instant ad discount for you\n• <strong>75%</strong> = $185.25 → converted to <strong>2.94 DPR tokens</strong> in your wallet\n\n🔗 <strong>Supply Chain Integration:</strong> DPR is used as the medium of exchange across 6 supply chain tiers. Each tier earns its own individual DPR reward by watching ads and answering surveys on Delper. The platform earns 0.5% buy + 0.5% sell charges on every DPR trade.\n\n💰 <strong>Token value:</strong> Seed price $0.21 → Year-5 target $327.40 (projected 1,559× return)\n\nReady to proceed to KYC verification?`,
+    Hindi: () => `DPR कैसे काम करता है:\n\n💠 <strong>DPR टोकन</strong> IBM Hyperledger पर बना एक ब्लॉकचेन लॉयल्टी प्रोटोकॉल है।\n\n🔄 <strong>प्रत्येक $247 लेनदेन</strong> स्वचालित रूप से विभाजित होता है:\n• <strong>25%</strong> = $61.75 तत्काल विज्ञापन छूट\n• <strong>75%</strong> = $185.25 → <strong>2.94 DPR टोकन</strong> आपके वॉलेट में\n\n🔗 <strong>आपूर्ति श्रृंखला एकीकरण:</strong> DPR 6 आपूर्ति श्रृंखला स्तरों के बीच विनिमय के माध्यम के रूप में उपयोग होता है। प्रत्येक स्तर विज्ञापन देखकर और सर्वेक्षण का उत्तर देकर अपना व्यक्तिगत DPR पुरस्कार अर्जित करता है।\n\n💰 <strong>टोकन मूल्य:</strong> बीज मूल्य $0.21 → Year-5 लक्ष्य $327.40\n\nकेवाईसी सत्यापन के लिए आगे बढ़ने के लिए तैयार हैं?`,
+    Arabic: () => `إليك كيف يعمل DPR:\n\n💠 <strong>رمز DPR</strong> هو بروتوكول ولاء مبني على IBM Hyperledger.\n\n🔄 <strong>كل معاملة بقيمة $247</strong> تُقسّم تلقائياً:\n• <strong>25%</strong> = $61.75 خصم فوري على الإعلانات\n• <strong>75%</strong> = $185.25 → <strong>2.94 رمز DPR</strong> في محفظتك\n\n🔗 <strong>تكامل سلسلة التوريد:</strong> يُستخدم DPR وسيطاً للتبادل بين طبقات سلسلة التوريد. كل طبقة تكسب مكافأتها الفردية بمشاهدة الإعلانات والإجابة على الاستبيانات.\n\n💰 <strong>قيمة الرمز:</strong> السعر الأولي $0.21 → الهدف في السنة 5: $327.40\n\nهل أنت مستعد للمتابعة إلى التحقق من KYC؟`,
+    default: () => `Here's how DPR works:\n\n💠 <strong>DPR Token</strong> is a blockchain loyalty & settlement protocol on IBM Hyperledger.\n\n🔄 <strong>Every $247 transaction</strong> splits automatically:\n• <strong>25%</strong> = $61.75 instant ad discount\n• <strong>75%</strong> = $185.25 → <strong>2.94 DPR tokens</strong> credited to your wallet\n\n🔗 <strong>Supply Chain:</strong> DPR is used as the medium of exchange across 6 tiers. Each tier earns its own individual DPR by watching ads and answering surveys on Delper. Platform earns 0.5% buy + 0.5% sell charges on every trade.\n\n💰 <strong>Token value:</strong> Seed $0.21 → Year-5 target $327.40 (1,559× projected)\n\nReady to proceed to KYC?`,
+  },
+  kyc: {
+    English: () => `<strong>Stage 2 — KYC / Identity Verification</strong> 🪪\n\nBefore transacting, all users must complete KYC (Know Your Customer) verification. Here's what you need:\n\n📋 <strong>Required Documents:</strong>\n• Government-issued photo ID (passport, national ID, or driver's licence)\n• Proof of address (utility bill or bank statement, less than 3 months old)\n• Selfie / live biometric capture\n\n🛡️ <strong>Powered by:</strong> Jumio — covering 200 countries, 5,000+ document types, FATF Travel Rule compliant\n\n⏱️ <strong>Processing time:</strong> Usually 2–5 minutes for automated verification\n\n✅ Once approved, your Hyperledger wallet is automatically created and linked to your profile.\n\nDo you have your documents ready?`,
+    Hindi: () => `<strong>चरण 2 — KYC / पहचान सत्यापन</strong> 🪪\n\nलेनदेन से पहले, सभी उपयोगकर्ताओं को KYC पूरा करना होगा।\n\n📋 <strong>आवश्यक दस्तावेज़:</strong>\n• सरकारी फोटो ID (पासपोर्ट, आधार, या ड्राइविंग लाइसेंस)\n• पते का प्रमाण (बिजली बिल या बैंक स्टेटमेंट, 3 महीने से कम पुराना)\n• सेल्फी / बायोमेट्रिक कैप्चर\n\n🛡️ <strong>Jumio</strong> द्वारा संचालित — 200 देशों में, FATF अनुपालित\n\n⏱️ <strong>प्रसंस्करण समय:</strong> आमतौर पर 2–5 मिनट\n\n✅ अनुमोदन के बाद आपका Hyperledger वॉलेट स्वचालित रूप से बनाया जाता है।\n\nक्या आपके दस्तावेज़ तैयार हैं?`,
+    default: () => `<strong>Stage 2 — KYC / Identity Verification</strong> 🪪\n\nAll users must complete KYC before transacting.\n\n📋 <strong>Documents needed:</strong>\n• Government photo ID (passport, national ID, or driver's licence)\n• Proof of address (less than 3 months old)\n• Selfie / biometric capture\n\n🛡️ Powered by <strong>Jumio</strong> — 200 countries, 5,000+ document types, FATF compliant\n\n⏱️ <strong>Processing time:</strong> 2–5 minutes\n\n✅ Once approved, your Hyperledger wallet is automatically created.\n\nDo you have your documents ready?`,
+  },
+  wallet: {
+    English: () => `<strong>Stage 3 — Wallet Setup</strong> 💼\n\nYour Hyperledger wallet is the heart of your DPR experience. Here's what it does:\n\n🏦 <strong>Wallet Features:</strong>\n• Holds your DPR tokens instantly upon each transaction\n• Supports <strong>38 fiat currencies</strong> and <strong>31 cryptocurrencies</strong>\n• Protected by multi-layer encryption (ISO 27001 certified)\n• Linked to your Token-Linked Card (Visa/Mastercard) for POS spending\n\n🔐 <strong>Security:</strong>\n• Private keys stored in a hardware security module (HSM)\n• 2-factor authentication on every login\n• Biometric unlock on mobile app\n\n💳 <strong>Token-Linked Card:</strong> Convert your DPR tokens to local currency instantly at any Visa/Mastercard merchant worldwide.\n\nYour wallet is now set up! Ready to proceed to purchasing DPR?`,
+    Hindi: () => `<strong>चरण 3 — वॉलेट सेटअप</strong> 💼\n\nआपका Hyperledger वॉलेट आपके DPR अनुभव का केंद्र है।\n\n🏦 <strong>वॉलेट की विशेषताएं:</strong>\n• प्रत्येक लेनदेन पर तुरंत DPR टोकन प्राप्त करता है\n• <strong>38 फिएट मुद्राओं</strong> और <strong>31 क्रिप्टोकरेंसी</strong> का समर्थन\n• ISO 27001 प्रमाणित बहु-परत एन्क्रिप्शन\n• Visa/Mastercard से लिंक्ड टोकन-लिंक्ड कार्ड\n\n🔐 <strong>सुरक्षा:</strong> HSM में प्राइवेट कीज़, 2-फैक्टर प्रमाणीकरण, बायोमेट्रिक अनलॉक\n\nआपका वॉलेट सेट हो गया! DPR खरीदने के लिए तैयार हैं?`,
+    default: () => `<strong>Stage 3 — Wallet Setup</strong> 💼\n\nYour Hyperledger wallet is the heart of your DPR experience.\n\n🏦 <strong>Features:</strong>\n• Instant DPR token credit on every transaction\n• Supports <strong>38 fiat currencies</strong> + <strong>31 cryptocurrencies</strong>\n• ISO 27001 multi-layer encryption\n• Token-Linked Card (Visa/Mastercard) for worldwide spending\n\n🔐 <strong>Security:</strong> HSM private keys, 2FA, biometric unlock\n\nYour wallet is ready! Proceed to DPR purchase?`,
+  },
+  purchase: {
+    English: () => `<strong>Stage 4 — DPR Purchase</strong> 🛒\n\n<strong>Token Pricing:</strong>\n• 🌱 Seed price: <strong>$0.21</strong> per DPR\n• 🚀 Launch (Y0): <strong>$244.84</strong> per DPR\n• 🎯 Year-5 target: <strong>$327.40</strong> per DPR\n• 📈 Projected seed return: <strong>1,559×</strong> (~335% CAGR)\n\n<strong>How to Buy:</strong>\n1. Choose your amount in DPR or fiat equivalent\n2. Select your payment method (bank transfer, crypto, or card)\n3. Smart contract executes the purchase and credits your wallet instantly\n4. A 0.5% transaction charge applies on the purchase\n\n⚠️ <strong>Lock-up period:</strong> DPR tokens are held for 60 months before open-market sale; however passive ETH rewards are accessible from Month 10.\n\n<em>Note: All price projections are forward-looking estimates, not guarantees.</em>\n\nReady to understand how your Reward Split works?`,
+    Hindi: () => `<strong>चरण 4 — DPR खरीद</strong> 🛒\n\n<strong>टोकन मूल्य निर्धारण:</strong>\n• 🌱 बीज मूल्य: <strong>$0.21</strong> प्रति DPR\n• 🚀 लॉन्च (Y0): <strong>$244.84</strong> प्रति DPR\n• 🎯 Year-5 लक्ष्य: <strong>$327.40</strong> प्रति DPR\n• 📈 अनुमानित बीज रिटर्न: <strong>1,559×</strong>\n\n<strong>कैसे खरीदें:</strong>\n1. DPR या समकक्ष फिएट में राशि चुनें\n2. भुगतान विधि चुनें (बैंक ट्रांसफर, क्रिप्टो, या कार्ड)\n3. स्मार्ट कॉन्ट्रैक्ट खरीद को तुरंत निष्पादित करता है\n4. 0.5% लेनदेन शुल्क लागू होता है\n\n⚠️ <strong>लॉक-अप:</strong> 60 महीने; ETH पुरस्कार Month 10 से उपलब्ध\n\nआपका रिवॉर्ड स्प्लिट कैसे काम करता है, यह समझने के लिए तैयार हैं?`,
+    default: () => `<strong>Stage 4 — DPR Purchase</strong> 🛒\n\n<strong>Token Pricing:</strong>\n• 🌱 Seed: <strong>$0.21</strong> | 🚀 Launch: <strong>$244.84</strong> | 🎯 Y5 Target: <strong>$327.40</strong>\n• Projected seed return: <strong>1,559×</strong> (~335% CAGR)\n\n<strong>How to Buy:</strong>\n1. Choose DPR amount or fiat equivalent\n2. Select payment method (bank, crypto, or card)\n3. Smart contract executes instantly — tokens credited to wallet\n4. 0.5% transaction fee applies\n\n⚠️ <strong>Lock-up:</strong> 60-month hold; ETH rewards from Month 10\n\n<em>Projections are estimates, not guarantees.</em>\n\nReady to learn about your Reward Split?`,
+  },
+  split: {
+    English: () => `<strong>Stage 5 — Reward Split Engine</strong> ✂️\n\nThis is the core innovation of DPR. Every single qualifying transaction is automatically processed as follows:\n\n📊 <strong>Standard Transaction: $247</strong>\n┌─────────────────────────────────┐\n│ 25% → Ad Discount = $61.75     │\n│      (instant savings at POS)  │\n│ 75% → Loyalty = $185.25        │\n│      ÷ $63.00 = 2.94 DPR      │\n│      (credited to your wallet) │\n└─────────────────────────────────┘\n\n⚡ <strong>Instant execution</strong> via Chainlink Oracle price feeds\n🔒 <strong>Immutable</strong> — audited by Trail of Bits & ConsenSys Diligence\n🌍 <strong>38 currencies</strong> — the split works in any local currency\n\nThe 0.5% charge on the loyalty pool (both earn and redeem) feeds the ETH Stability Pool and platform revenue.\n\nReady to confirm your transaction?`,
+    Hindi: () => `<strong>चरण 5 — रिवॉर्ड स्प्लिट इंजन</strong> ✂️\n\nयह DPR की मुख्य नवाचार है। प्रत्येक योग्य लेनदेन स्वचालित रूप से संसाधित होता है:\n\n📊 <strong>मानक लेनदेन: $247</strong>\n• 25% → विज्ञापन छूट = $61.75 (तत्काल बचत)\n• 75% → लॉयल्टी = $185.25 → 2.94 DPR टोकन\n\n⚡ Chainlink Oracle के माध्यम से तत्काल निष्पादन\n🔒 Trail of Bits और ConsenSys द्वारा ऑडिट किया गया\n\n0.5% शुल्क ETH स्थिरता पूल को फीड करता है।\n\nआइए 6-परत श्रृंखला देखें!`,
+    default: () => `<strong>Stage 5 — Reward Split Engine</strong> ✂️\n\nEvery qualifying transaction is automatically split:\n\n📊 <strong>$247 transaction:</strong>\n• <strong>25%</strong> = $61.75 → Instant ad discount at POS\n• <strong>75%</strong> = $185.25 → <strong>2.94 DPR tokens</strong> in your wallet\n\n⚡ Instant via Chainlink Oracle | 🔒 Audited by Trail of Bits\n\n0.5% charge on loyalty pool feeds the ETH Stability Pool.\n\nReady to confirm your transaction?`,
+  },
+  confirm: {
+    English: (u) => `<strong>Stage 7 — Transaction Confirmation</strong> ✅\n\n<strong>Your Session Summary:</strong>\n\n👤 Customer: <strong>${u.name}</strong>\n🌍 Country: ${u.country}\n📱 Phone: ${u.phone}\n📧 Email: ${u.email}\n\n💠 <strong>Transaction Details:</strong>\n• Standard transaction: $247.00\n• Ad discount (25%): -$61.75\n• DPR tokens earned (75%): <strong>2.94 DPR</strong>\n• Platform fee (0.5%): $1.24\n• ETH Pool contribution (80% of fee): $0.99\n\n🌐 Supply chain DPR trades settled — buy/sell charges recorded\n📡 Chainlink Oracle price confirmed\n🔒 Immutable record written to Hyperledger ledger\n\n⏳ <strong>Settlement:</strong> Instant\n🏦 <strong>Tokens in wallet:</strong> 2.94 DPR at $244.84 = ~$720 value\n\nTransaction confirmed! Proceeding to completion...`,
+    default: (u) => `<strong>Stage 7 — Transaction Confirmation</strong> ✅\n\n👤 Customer: <strong>${u.name}</strong> | 🌍 ${u.country}\n\n💠 <strong>Summary:</strong>\n• Transaction: $247.00\n• Ad discount: -$61.75\n• DPR earned: <strong>2.94 DPR</strong>\n• Platform fee: $1.24 (80% → ETH Pool)\n\n📡 Oracle confirmed | 🔒 Immutable record on Hyperledger\n\n✅ <strong>Settlement: Instant</strong>\n\nProceeding to completion...`,
+  },
+  complete: {
+    English: (u) => `🎉 <strong>Stage 8 — Transaction Complete!</strong>\n\nCongratulations, <strong>${u.name}</strong>! Your DPR transaction journey is complete.\n\n🏆 <strong>What happens next:</strong>\n• Your <strong>2.94 DPR tokens</strong> are live in your Hyperledger wallet\n• ETH passive rewards: accessible from <strong>Month 10</strong>\n• DPR token sale: available from <strong>Month 60</strong> (5 years)\n• Use your <strong>Token-Linked Card</strong> to spend DPR at any Visa/Mastercard merchant today!\n\n📊 <strong>Your DPR Projection (1,559× from seed):</strong>\n• Current (Y0): ~$720 for 2.94 DPR\n• Year 5 target: ~$963 for 2.94 DPR @ $327.40\n\n📞 <strong>Need support?</strong>\n• Email: info@delperecom.com\n• WhatsApp: +91 6361 888 254\n• Website: www.delperecom.com\n\n<em>Thank you for choosing Delper Ecom. Click "End Chat & Send Transcript" to receive your full session record.</em>`,
+    Hindi: (u) => `🎉 <strong>चरण 8 — लेनदेन पूर्ण!</strong>\n\nबधाई हो, <strong>${u.name}</strong> जी! आपकी DPR लेनदेन यात्रा पूरी हो गई।\n\n🏆 <strong>आगे क्या होता है:</strong>\n• आपके <strong>2.94 DPR टोकन</strong> आपके Hyperledger वॉलेट में जीवंत हैं\n• ETH पुरस्कार: <strong>Month 10</strong> से उपलब्ध\n• DPR बिक्री: <strong>Month 60</strong> से उपलब्ध\n• आज ही अपने <strong>Token-Linked Card</strong> से कहीं भी खर्च करें!\n\n📞 <strong>सहायता:</strong> info@delperecom.com | +91 6361 888 254\n\n<em>Delper Ecom चुनने के लिए धन्यवाद। ट्रांसक्रिप्ट प्राप्त करने के लिए "End Chat" पर क्लिक करें।</em>`,
+    default: (u) => `🎉 <strong>Stage 8 — Transaction Complete!</strong>\n\nCongratulations, <strong>${u.name}</strong>!\n\n🏆 <strong>What's next:</strong>\n• <strong>2.94 DPR tokens</strong> live in your wallet\n• ETH rewards: from <strong>Month 10</strong>\n• Token sale: from <strong>Month 60</strong>\n• Spend with Token-Linked Card anywhere Visa/Mastercard is accepted!\n\n📞 <strong>Support:</strong> info@delperecom.com | +91 6361 888 254\n\n<em>Thank you! Click "End Chat & Send Transcript" to receive your session record.</em>`,
+  }
+};
+
+function getMsg(key, arg) {
+  const lang = S.lang;
+  const block = T[key];
+  if (!block) return "";
+  const fn = block[lang] || block["default"] || block["English"];
+  return fn ? fn(arg) : "";
+}
+
+// ═══════════════════════════════════
+// QUICK REPLIES PER STAGE
+// ═══════════════════════════════════
+const QR = [
+  ["Tell me more about DPR","How much can I earn?","Show me the token price","How do supply chain tiers earn?"],
+  ["Start my KYC now","What documents do I need?","How long does KYC take?","Is my data safe?"],
+  ["Set up my wallet","What currencies are supported?","How do I access my wallet?","Is the wallet secure?"],
+  ["How do I buy DPR?","What is the seed price?","When can I sell?","What is the lock-up period?"],
+  ["Show me the split calculation","How does the smart contract work?","What is the ETH pool?","How do SC tiers earn DPR?"],
+  ["Confirm my transaction","Review my details","What happens after confirmation?","How fast is settlement?"],
+  ["How do I use my tokens?","Contact support","Tell me about the Token Card","When are ETH rewards available?"],
+];
+
+const FLOW = [
+  { key:"overview", stage:1, qr:QR[0] },
+  { key:"kyc",      stage:2, qr:QR[1] },
+  { key:"wallet",   stage:3, qr:QR[2] },
+  { key:"purchase", stage:4, qr:QR[3] },
+  { key:"split",    stage:5, qr:QR[4] },
+  { key:"confirm",  stage:6, qr:QR[5] },
+  { key:"complete", stage:7, qr:QR[6] },
+];
+
+// ═══════════════════════════════════
+// KEYWORD MAPS — detect user intent
+// ═══════════════════════════════════
+const KEYWORDS = {
+  overview:  ["dpr","overview","how","work","what","explain","token","ecosystem","start","begin","initiat"],
+  kyc:       ["kyc","verify","id","identity","document","passport","aadhaar","biometric","identity"],
+  wallet:    ["wallet","setup","address","currency","card","hyperledger","secure","store"],
+  purchase:  ["buy","purchase","price","cost","seed","invest","lock","hold","invest","order"],
+  split:     ["split","reward","discount","earn","loyalty","percent","25","75","2.94","supply","chain","tier","ads","survey","medium","exchange","sc"],
+  confirm:   ["confirm","summary","review","detail","fee","charge","check"],
+  complete:  ["complete","done","finish","next","token card","spend","use","support","contact"],
+};
+
+// Generic FAQ answers
+const FAQ = {
+  "token price": () => `💰 <strong>DPR Token Pricing:</strong>\n• Seed: $0.21 | Launch (Y0): $244.84 | Year-5 target: $327.40\n• Projected 1,559× return from seed price\n• CAGR ~335% over 5 years\n<em>These are forward-looking projections, not guarantees.</em>`,
+  "supply chain": () => `🏭 <strong>Supply Chain & DPR:</strong>\n\nThe 6 supply chain tiers are integrated into Delper as a medium of exchange:\n\n• <strong>DPR is used as the currency</strong> between tiers (Consumer, Distributor, Manufacturer, Processor, Wholesaler, Raw Material Supplier) to settle trade\n• Each tier earns its <strong>own individual DPR reward</strong> independently by watching ads and answering surveys on the Delper platform\n• There is <strong>no shared multiplier or cascading reward</strong> across tiers\n• The platform earns <strong>0.5% on each DPR buy</strong> and <strong>0.5% on each DPR sell</strong> between supply chain participants`,
+  "eth pool": () => `🏦 <strong>ETH Stability Pool:</strong>\n• 80% of all platform charges → ETH treasury\n• $244.8B/month at launch\n• 5-year cumulative: $17.51 trillion\n• By Year 5: $11.67 ETH backing per DPR token\n• Auto-buybacks defend the token price floor.`,
+  "fee": () => `💳 <strong>Fee Structure:</strong> All charges are 0.5% per event:\n• Reward Earned: 0.5% of loyalty pool\n• Reward Redeemed: 0.5% at POS redemption\n• SC Buy: 0.5% when buying DPR for procurement\n• SC Sell: 0.5% when liquidating DPR\n80% → ETH Pool | 20% → Platform Revenue`,
+  "contact": () => `📞 <strong>Support:</strong>\n• Email: info@delperecom.com\n• WhatsApp/Phone: +91 6361 888 254\n• Website: www.delperecom.com\n• Marketplace: marketplace.delperecom.com`,
+  "lock": () => `🔒 <strong>Lock-up Period:</strong>\n• DPR tokens: Held for 60 months (5 years) before open-market sale\n• ETH/passive rewards: Accessible from Month 10 onward\n• POS Redemption: Tokens can be spent at any partnered merchant at any time`,
+};
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+let S = {
+  user: null, lang: "English",
+  flowStep: -1,   // -1 = greeting shown, 0..7 = flow stages
+  history: [],    // [{who,text,time}]
+  sessionId: "DPR-" + Date.now().toString(36).toUpperCase(),
+  busy: false,
+};
+
+// ═══════════════════════════════════
+// INIT DOM
+// ═══════════════════════════════════
+(function domInit(){
+  // Langs
+  const ls = document.getElementById("langSel");
+  LANGS.forEach(([v,l])=>{ const o=document.createElement("option"); o.value=v; o.textContent=l; ls.appendChild(o); });
+  ls.addEventListener("change",e=>{ S.lang=e.target.value; });
+
+  // Countries
+  const cs=document.getElementById("rc"), ds=document.getElementById("rd");
+  CTRIES.sort((a,b)=>a.n.localeCompare(b.n)).forEach(c=>{
+    const o1=document.createElement("option"); o1.value=c.n; o1.textContent=c.n;
+    if(c.n==="India") o1.selected=true;
+    cs.appendChild(o1);
+    const o2=document.createElement("option"); o2.value=c.d;
+    o2.textContent=c.d+" ("+c.n.substring(0,3)+")";
+    if(c.n==="India") o2.selected=true;
+    ds.appendChild(o2);
+  });
+  cs.addEventListener("change",()=>{ const f=CTRIES.find(c=>c.n===cs.value); if(f) ds.value=f.d; });
+
+  // Stages — build with click handlers for banner navigation
+  const se=document.getElementById("stagesEl");
+  STAGES.forEach((s,i)=>{
+    const d=document.createElement("div"); d.className="stage"+(i===0?" active":""); d.id="stg"+i;
+    d.innerHTML=`<div class="stage-dot">${i+1}</div><div class="stage-label">${s}</div>`;
+    d.style.cursor="pointer";
+    d.title="Jump to: "+s;
+    d.addEventListener("click",()=>navigateToStage(i));
+    se.appendChild(d);
+    if(i<STAGES.length-1){ const l=document.createElement("div"); l.className="stage-line"; l.id="sln"+i; se.appendChild(l); }
+  });
+
+  document.getElementById("sidEl").textContent="Session: "+S.sessionId;
+})();
+
+// ═══════════════════════════════════
+// VALIDATION & START
+// ═══════════════════════════════════
+function startChat(){
+  const name=document.getElementById("rn").value.trim();
+  const country=document.getElementById("rc").value;
+  const dial=document.getElementById("rd").value;
+  const phone=document.getElementById("rp").value.trim();
+  const email=document.getElementById("re").value.trim();
+  let ok=true;
+  ["rn","rp","re"].forEach(id=>document.getElementById(id).classList.remove("err"));
+  if(!name){ document.getElementById("rn").classList.add("err"); ok=false; }
+  if(!phone||!/^\d{4,15}$/.test(phone)){ document.getElementById("rp").classList.add("err"); ok=false; }
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ document.getElementById("re").classList.add("err"); ok=false; }
+  if(!ok){ toast("Please fill all fields correctly.","err"); return; }
+
+  S.user={ name, country, phone:dial+" "+phone, email };
+  S.lang=document.getElementById("langSel").value;
+
+  document.getElementById("regPanel").classList.add("hidden");
+  document.getElementById("userBar").classList.remove("hidden");
+  document.getElementById("stageBar").classList.remove("hidden");
+  document.getElementById("inputBar").classList.remove("hidden");
+  document.getElementById("endBar").classList.remove("hidden");
+
+  const ub=document.getElementById("userBar");
+  ub.innerHTML=`<strong>${name}</strong><span class="sep">·</span>${country}<span class="sep">·</span>${dial} ${phone}<span class="sep">·</span>${email}`;
+
+  setStage(0);
+  // Show greeting with simulated delay
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    const msg = getMsg("greet", S.user);
+    addBotMsg(msg);
+    setQR(["Tell me about DPR","How does the transaction work?","What is the ETH pool?","Show me the token price"]);
+  }, 900);
+}
+
+// ═══════════════════════════════════
+// STAGE UI
+// ═══════════════════════════════════
+function setStage(idx){
+  STAGES.forEach((_,i)=>{
+    const el=document.getElementById("stg"+i);
+    if(!el) return;
+    el.className="stage"+(i<idx?" done":(i===idx?" active":""));
+    if(i<STAGES.length-1){
+      const ln=document.getElementById("sln"+i);
+      if(ln) ln.style.background=i<idx?"var(--teal)":"var(--border)";
+    }
+  });
+}
+
+// ═══════════════════════════════════
+// MESSAGE HANDLING
+// ═══════════════════════════════════
+function addBotMsg(html){
+  const t=now();
+  const w=document.getElementById("chatWin");
+  const d=document.createElement("div"); d.className="msg bot";
+  d.innerHTML=`<div class="msg-av">🤖</div><div class="msg-col"><div class="msg-bub">${html}</div><div class="msg-time">${t}</div></div>`;
+  w.appendChild(d); w.scrollTop=w.scrollHeight;
+  S.history.push({who:"bot",text:html.replace(/<[^>]+>/g,""),time:t});
+}
+
+function addUserMsg(text){
+  const t=now();
+  const w=document.getElementById("chatWin");
+  const av=S.user.name[0].toUpperCase();
+  const d=document.createElement("div"); d.className="msg user";
+  d.innerHTML=`<div class="msg-av">${av}</div><div class="msg-col"><div class="msg-bub">${text}</div><div class="msg-time">${t}</div></div>`;
+  w.appendChild(d); w.scrollTop=w.scrollHeight;
+  S.history.push({who:"user",text,time:t});
+}
+
+let typingEl=null;
+function showTyping(){
+  if(typingEl) return;
+  const w=document.getElementById("chatWin");
+  const d=document.createElement("div"); d.className="msg bot"; d.id="typingEl";
+  d.innerHTML=`<div class="msg-av">🤖</div><div class="msg-col"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  w.appendChild(d); w.scrollTop=w.scrollHeight;
+  typingEl=d; document.getElementById("sendBtn").disabled=true;
+}
+function hideTyping(){ if(typingEl){ typingEl.remove(); typingEl=null; } document.getElementById("sendBtn").disabled=false; }
+
+function setQR(items){
+  const el=document.getElementById("qrWrap"); el.innerHTML="";
+  items.forEach(r=>{ const b=document.createElement("button"); b.className="qr-btn"; b.textContent=r; b.onclick=()=>handleInput(r); el.appendChild(b); });
+}
+
+// ═══════════════════════════════════
+// INPUT
+// ═══════════════════════════════════
+function doSend(){ const ta=document.getElementById("msgIn"); const t=ta.value.trim(); if(!t||S.busy) return; ta.value=""; ta.style.height="auto"; handleInput(t); }
+function onKey(e){ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); doSend(); } }
+function autoResize(el){ el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,110)+"px"; }
+
+// ═══════════════════════════════════
+// CORE LOGIC — no external API
+// ═══════════════════════════════════
+function handleInput(text){
+  if(S.busy) return;
+  S.busy=true;
+  document.getElementById("qrWrap").innerHTML="";
+  addUserMsg(text);
+  showTyping();
+
+  // Simulate thinking delay
+  const delay = 600 + Math.random()*700;
+  setTimeout(()=>{
+    hideTyping();
+    const response = generateResponse(text.toLowerCase());
+    addBotMsg(response.msg);
+    if(response.stage!==undefined) setStage(response.stage);
+    if(response.qr) setQR(response.qr);
+    S.busy=false;
+  }, delay);
+}
+
+function generateResponse(input){
+  // Check FAQ keywords first
+  for(const [kw, fn] of Object.entries(FAQ)){
+    if(input.includes(kw)) return { msg:fn(), qr: currentQR() };
+  }
+
+  // Determine which flow step to advance to
+  // If user says yes/continue/next/proceed → advance flow
+  const isAdvance = /yes|continue|next|proceed|ok|sure|ready|go|start|begin|agree|understand|got it|understood|yep|yeah/.test(input);
+
+  // Try to detect stage from keywords
+  let detected = -1;
+  for(const [key, words] of Object.entries(KEYWORDS)){
+    if(words.some(w=>input.includes(w))){ detected = Object.keys(KEYWORDS).indexOf(key); break; }
+  }
+
+  // Advance logic
+  let nextStep = S.flowStep;
+  if(isAdvance && S.flowStep < FLOW.length-1){ nextStep = S.flowStep+1; }
+  else if(detected >= 0 && detected !== S.flowStep){ nextStep = detected; }
+  else if(S.flowStep < 0){ nextStep = 0; } // First interaction after greeting
+
+  if(nextStep === S.flowStep && S.flowStep >= 0){
+    // Same stage — give contextual help
+    return contextHelp(input, S.flowStep);
+  }
+
+  S.flowStep = nextStep;
+  if(nextStep < 0) nextStep = 0;
+
+  const step = FLOW[Math.min(nextStep, FLOW.length-1)];
+  const msg = getMsg(step.key, S.user);
+  return { msg, stage: step.stage-1, qr: step.qr };
+}
+
+function contextHelp(input, step){
+  // Stage-specific contextual help for repeated questions
+  const helps = [
+    // Stage 0: overview
+    [["earn","how much"], () => `💰 On a standard $247 transaction, you earn <strong>2.94 DPR tokens</strong> worth ~$720 at launch price, projected to reach ~$963 at Year-5 price ($327.40).\n\nSupply chain tiers also each earn their own individual DPR by watching ads and answering surveys on Delper.`],
+    // Stage 1: kyc
+    [["time","long","fast"], () => `⏱️ KYC typically takes <strong>2–5 minutes</strong> for automated verification via Jumio. Complex cases may take up to 24 hours for manual review.`],
+    // Stage 2: wallet
+    [["currency","support"], () => `🌍 Your wallet supports <strong>38 fiat currencies</strong> (USD, EUR, INR, AED, SGD, GBP, MYR, and more) and <strong>31 cryptocurrencies</strong> including BTC, ETH, USDT, USDC.`],
+    // Stage 3: purchase
+    [["when","sell","lock"], () => `🔒 DPR tokens are locked for <strong>60 months (5 years)</strong> before open-market sale. However:\n• ETH/passive rewards → accessible from Month 10\n• POS redemption → anytime at partnered merchants`],
+    // Stage 4: split
+    [["fee","charge","cost"], () => `💳 The platform charges <strong>0.5% per event</strong> (earn and redeem). On a $247 transaction, the fee is ~$1.24. Of that, 80% ($0.99) goes to the ETH Stability Pool and 20% ($0.25) to platform revenue.`],
+    // Stage 5: chain
+    [["supply","partner","sap","sc","tier","earn","ads","survey"], () => `🏭 <strong>How Supply Chain Tiers Earn DPR:</strong>\n\nEach of the 6 tiers (Consumer, Distributor, Manufacturer, Processor, Wholesaler, Raw Material Supplier) earns its <strong>own individual DPR reward</strong> on the Delper platform by:\n• Watching ads (₹12/min × up to 180 min/day)\n• Answering surveys\n\nDPR also acts as the <strong>medium of exchange</strong> between tiers for trade settlement. The platform earns <strong>0.5% buy charge + 0.5% sell charge</strong> on every DPR trade between participants.`],
+    // Stage 6: confirm
+    [["fee","total"], () => `📊 Transaction confirmation breakdown:\n• Amount: $247.00\n• Ad discount (25%): -$61.75\n• DPR earned (75%): 2.94 tokens\n• Platform fee (0.5%): $1.24\n• ETH pool (80% of fee): $0.99`],
+    // Stage 7: complete
+    [["support","contact","help"], () => `📞 <strong>Delper Ecom Support:</strong>\n• Email: info@delperecom.com\n• WhatsApp: +91 6361 888 254\n• Website: www.delperecom.com\n• Hours: 24/7 via email; business hours for phone`],
+  ];
+
+  const stepHelps = helps[Math.min(step, helps.length-1)] || [];
+  for(const [kws, fn] of stepHelps){
+    if(kws.some(k=>input.includes(k))) return { msg:fn(), qr:currentQR() };
+  }
+
+  // Generic fallback
+  const fallbacks = [
+    `I'm here to help! Could you clarify your question about this stage? Or type <strong>"next"</strong> to continue to the next step.`,
+    `Great question! Let me know which part you'd like me to explain further, or say <strong>"continue"</strong> to move forward.`,
+    `I understand. For more specific details, feel free to ask about the token price, fees, KYC, or wallet setup. Or say <strong>"next"</strong> to proceed.`,
+  ];
+  return { msg: fallbacks[Math.floor(Math.random()*fallbacks.length)], qr:currentQR() };
+}
+
+function currentQR(){
+  const step = Math.max(0, Math.min(S.flowStep, QR.length-1));
+  return QR[step];
+}
+
+// ═══════════════════════════════════
+// STAGE BANNER NAVIGATION
+// ═══════════════════════════════════
+function navigateToStage(stageIndex){
+  // Only work after chat has started (user is registered)
+  if(!S.user) return;
+  if(S.busy) return;
+
+  // Map stage index → FLOW entry
+  // FLOW is ordered: overview(0) kyc(1) wallet(2) purchase(3) split(4) confirm(5) complete(6)
+  const flowIndex = stageIndex; // 1:1 mapping after chain removal
+  const step = FLOW[Math.min(flowIndex, FLOW.length-1)];
+
+  S.busy=true;
+  document.getElementById("qrWrap").innerHTML="";
+
+  // Show as user "navigating" without adding a user message
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    S.flowStep = flowIndex;
+    const msg = getMsg(step.key, S.user);
+    addBotMsg(msg);
+    setStage(step.stage-1);
+    setQR(step.qr);
+    S.busy=false;
+  }, 400 + Math.random()*300);
+}
+
+
+// ═══════════════════════════════════
+// END CHAT
+// ═══════════════════════════════════
+function endChat(){
+  setStage(6);
+  const transcript = buildTranscript();
+  // Download as .txt
+  const blob=new Blob([transcript],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="DPR-Transcript-"+S.sessionId+".txt"; a.click();
+
+  // Open mailto with transcript summary
+  const subj=encodeURIComponent("DPR Chat Transcript – "+S.user.name+" – "+S.sessionId);
+  const body=encodeURIComponent(transcript.substring(0,1800)+"...\n\n[Full transcript downloaded as .txt file]");
+  const mailtoLink="mailto:gkbharta44@gmail.com?cc="+encodeURIComponent(S.user.email)+"&subject="+subj+"&body="+body;
+
+  // Open mailto (works in most email clients)
+  const mailWin=window.open(mailtoLink,"_blank");
+  if(!mailWin) window.location.href=mailtoLink;
+
+  document.getElementById("modalEmail").textContent=S.user.email;
+  document.getElementById("modal").classList.remove("hidden");
+  toast("📥 Transcript downloaded + email client opened!");
+}
+
+function buildTranscript(){
+  const u=S.user;
+  let t=`DELPER ECOM – DPR TRANSACTION CHAT TRANSCRIPT
+============================================
+Session ID : ${S.sessionId}
+Date/Time  : ${new Date().toLocaleString()}
+Language   : ${S.lang}
+
+CUSTOMER DETAILS
+────────────────
+Name    : ${u.name}
+Country : ${u.country}
+Phone   : ${u.phone}
+Email   : ${u.email}
+
+Stage Reached: ${STAGES[Math.min(S.flowStep,6)]} (${Math.min(S.flowStep+1,7)} of 7)
+
+CHAT TRANSCRIPT
+────────────────\n`;
+  S.history.forEach(m=>{
+    const who=m.who==="bot"?"DPR Assistant":"Customer ("+u.name+")";
+    t+=`[${m.time}] ${who}:\n${m.text}\n\n`;
+  });
+  t+=`────────────────
+Delper Ecom Pvt Ltd | info@delperecom.com | +91 6361 888 254
+www.delperecom.com | CryptoCard Global | June 2026 | Confidential`;
+  return t;
+}
+
+// ═══════════════════════════════════
+// UTILS
+// ═══════════════════════════════════
+function now(){ return new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}); }
+function toast(msg,type=""){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.className="toast show"+(type?" "+type:"");
+  setTimeout(()=>{ t.className="toast"; },4000);
+}
+</script>
+</body>
+</html>
